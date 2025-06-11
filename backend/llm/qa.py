@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
-from embeddings.retriever import retrieve_code_chunks
+from embedder.embedder import retrieve_code_chunks
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

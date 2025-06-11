@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from retriever.retriever import retrieve_relevant_chunks
+from retriever.retriever import retrieve_code_chunks
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ def retrieve_chunks(request: QueryRequest):
     Retrieve top-k relevant code/documentation chunks for a query.
     """
     try:
-        results = retrieve_relevant_chunks(request.query, top_k=request.top_k)
+        results = retrieve_code_chunks(request.query, top_k=request.top_k)
         return {"results": results}
     except Exception as e:
         return {"error": str(e)}

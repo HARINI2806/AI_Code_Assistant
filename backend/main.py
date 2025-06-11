@@ -41,3 +41,5 @@ app.include_router(summary.router, prefix="/summary", tags=["Summary Generator"]
 @app.get("/")
 def root():
     return {"message": "Welcome to the AI Code Assistant API"}
+
+#uvicorn main:app --reload

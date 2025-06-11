@@ -11,3 +11,18 @@ ast
 reportlab
 chromadb
 python-dotenv
+
+# Mermaid Diagram Generation
+graphviz>=0.20.1
+
+# Code Parsing & Execution
+astunparse>=1.6.3
+
+# Utils
+aiofiles>=23.2.1
+python-multipart>=0.0.9
+pydantic>=2.7.0
+rich>=13.7.1
+
+# For async OpenAI Streaming
+httpx>=0.27.0

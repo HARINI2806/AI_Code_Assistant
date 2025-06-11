@@ -17,7 +17,7 @@ def get_vectorstore():
     return Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
 # Retrieve top-k relevant code chunks
-def retrieve_code_chunks(query: str, k: int = 5):
+def retrieve_code_chunks(query: str, top_k: int = 5):
     vectorstore = get_vectorstore()
-    results = vectorstore.similarity_search(query, k=k)
+    results = vectorstore.similarity_search(query, k=top_k)
     return [doc.page_content for doc in results]

@@ -9,6 +9,7 @@ def sample_run():
     bank.get_account("Bob").deposit(500)
     bank.transfer("Alice", "Bob", 200)
     export_bank_data(bank)
+    return bank
 
 if __name__ == "__main__":
     sample_run()

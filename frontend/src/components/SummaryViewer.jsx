@@ -24,7 +24,6 @@ const SummaryViewer = () => {
 
   return (
     <div className="p-4 bg-white rounded shadow">
-      <h3 className="text-xl font-semibold mb-4">Codebase Summary</h3>
       {loading ? (
         <p>Loading summaries...</p>
       ) : summaries.length > 0 ? (

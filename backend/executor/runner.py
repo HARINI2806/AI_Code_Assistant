@@ -3,6 +3,7 @@
 import os
 import ast
 import traceback
+import sys
 
 def find_python_files(codebase_path: str) -> list[str]:
     py_files = []
@@ -27,22 +28,32 @@ def extract_function_source(file_path: str, function_name: str) -> str | None:
         pass
     return None
 
-def run_function_from_codebase(codebase_path: str, function_name: str, args: list = [], kwargs: dict = {}) -> str:
-    files = find_python_files(codebase_path)
+def run_function_from_codebase(codebase_path, function_name, args=None, kwargs=None):
+    args = args or []
+    kwargs = kwargs or {}
 
-    for file in files:
-        source = extract_function_source(file, function_name)
-        if source:
-            try:
-                local_ns = {}
-                exec(source, globals(), local_ns)
+# if not isinstance(kwargs, dict):
+#     raise ValueError("`kwargs` must be a dictionary")
 
-                if function_name not in local_ns:
-                    raise ValueError(f"Function `{function_name}` not defined properly.")
+    main_path = os.path.join(codebase_path, "main.py")
+    if not os.path.exists(main_path):
+        raise FileNotFoundError(f"{main_path} not found.")
 
-                result = local_ns[function_name](*args, **kwargs)
-                return f"✅ Output from `{function_name}`:\n{result}"
-            except Exception as e:
-                return f"❌ Error running `{function_name}` from `{file}`:\n{traceback.format_exc()}"
+    # Add the codebase folder to sys.path so Python can resolve local imports
+    sys.path.insert(0, os.path.abspath(codebase_path))
 
-    return f"⚠️ Function `{function_name}` not found in codebase."
+    try:
+        with open(main_path, "r", encoding="utf-8") as f:
+            code = f.read()
+
+        global_ns = {}
+        exec(code, global_ns)
+        result = global_ns[function_name](*args, **kwargs)
+        return result
+
+    except Exception as e:
+        raise RuntimeError(f"❌ Error running `{function_name}` from `{main_path}`:\n{e}")
+
+    finally:
+        # Clean up sys.path to avoid pollution
+        sys.path.pop(0)

@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+openai==0.28.1
+pydantic
+python-multipart
+tree-sitter
+tiktoken
+langchain
+langchain_community
+ast
+reportlab
+chromadb
+python-dotenv

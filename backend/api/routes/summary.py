@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from summary_generator.summary_generator import generate_summaries
+from summarizer.summary_generator import generate_summaries
 
 router = APIRouter()
 

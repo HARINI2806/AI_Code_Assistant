@@ -14,7 +14,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 llm = ChatOpenAI(
     temperature=0,
     openai_api_key=OPENAI_API_KEY,
-    model_name="gpt-4",  # Or use gpt-3.5-turbo for speed
+    model_name="gpt-4.1-mini",  # Or use gpt-3.5-turbo for speed
 )
 
 # 2. QA Chain: Given context + question → get answer

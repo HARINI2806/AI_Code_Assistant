@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File
 from typing import Optional
-from embedder.embedder import embed_codebase
+from embeddings.embedder import embed_codebase
 import tempfile
 import shutil
 import os

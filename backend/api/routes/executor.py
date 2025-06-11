@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from executor.executor import run_function_from_codebase
+from executor.runner import run_function_from_codebase
 
 router = APIRouter()
 

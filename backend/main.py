@@ -2,16 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import all routers
-from routes import (
-    embedder,
-    retriever,
-    qa,
-    pdf,
-    executor,
-    visualizer,
-    docstring,
-    summary
-)
+from api.routes import embedder, docstring, executor, pdf, qa, retriever, summarizer, summary, visualizer
 
 app = FastAPI(
     title="AI Code Assistant API",

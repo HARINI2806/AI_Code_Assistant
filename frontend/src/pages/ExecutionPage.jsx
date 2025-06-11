@@ -9,3 +9,4 @@ const ExecutionPage = () => {
     </div>
   );
 };
+export default ExecutionPage;

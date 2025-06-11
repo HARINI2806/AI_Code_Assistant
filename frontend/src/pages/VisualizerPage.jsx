@@ -1,6 +1,6 @@
 // src/pages/VisualizerPage.js
 import React from 'react';
-import DiagramViewer from '../components/DiagramViewer';
+import MermaidRenderer from '../components/MermaidRenderer';
 
 const VisualizerPage = () => {
   return (

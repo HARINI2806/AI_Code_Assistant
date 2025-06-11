@@ -1,6 +1,6 @@
 // src/pages/SummaryPage.js
 import React from 'react';
-import SummaryViewer from '../components/SummaryViewer';
+import SummaryViewer from '../components/SummaryViewer'
 
 const SummaryPage = () => {
   return (

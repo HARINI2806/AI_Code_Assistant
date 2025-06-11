@@ -6,7 +6,7 @@ const Navbar = () => (
   <nav className="bg-white shadow p-4 flex justify-between items-center">
     <div className="font-bold text-xl">AI Code Assistant</div>
     <div className="space-x-4">
-      <Link to="/" className="hover:underline">Embed</Link>
+      <Link to="/embed" className="hover:underline">Embed</Link>
       <Link to="/qa" className="hover:underline">QA</Link>
       <Link to="/pdf" className="hover:underline">PDF</Link>
       <Link to="/executor" className="hover:underline">Executor</Link>

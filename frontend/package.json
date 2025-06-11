@@ -1,6 +1,8 @@
 {
     "name": "ai-code-assistant-ui",
     "version": "1.0.0",
+    "description": "Frontend for Code Insight AI",
+    "main": "src/main.jsx",
     "private": true,
     "scripts": {
         "dev": "vite",
@@ -8,17 +10,23 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@headlessui/react": "^1.7.16",
+        "@heroicons/react": "^2.1.3",
         "@monaco-editor/react": "^4.4.6",
         "@react-pdf-viewer/core": "^3.10.0",
         "@react-pdf-viewer/default-layout": "^3.10.0",
+        "@tailwindcss/forms": "^0.5.7",
         "axios": "^1.6.8",
+        "classnames": "^2.5.1",
         "mermaid": "^10.6.1",
         "prism-react-renderer": "^2.4.1",
         "react": "^18.2.0",
+        "react-diff-viewer-continued": "^3.4.0",
         "react-dom": "^18.2.0",
         "react-dropzone": "^14.2.3",
         "react-router-dom": "^6.22.3",
-        "react-toastify": "^9.1.3"
+        "react-toastify": "^9.1.3",
+        "react-tooltip": "^5.20.0"
     },
     "devDependencies": {
         "@vitejs/plugin-react": "^4.1.0",

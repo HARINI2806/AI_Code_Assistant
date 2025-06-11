@@ -1,8 +1,8 @@
-// src/components/SummaryDisplay.js
+// src/components/SummaryViewer.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const SummaryDisplay = () => {
+const SummaryViewer = () => {
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -43,4 +43,4 @@ const SummaryDisplay = () => {
   );
 };
 
-export default SummaryDisplay;
+export default SummaryViewer;

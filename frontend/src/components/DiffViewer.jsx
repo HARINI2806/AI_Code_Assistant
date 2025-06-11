@@ -1,6 +1,6 @@
 // src/components/DiffViewer.js
 import React, { useState } from 'react';
-import ReactDiffViewer from 'react-diff-viewer';
+import ReactDiffViewer from 'react-diff-viewer-continued';
 import axios from 'axios';
 
 const DiffViewer = () => {

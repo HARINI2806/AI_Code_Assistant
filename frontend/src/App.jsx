@@ -9,7 +9,7 @@ import QAView from './pages/QAView';
 import DocstringPage from './pages/DocstringPage';
 import ExecutionPage from './pages/ExecutionPage';
 import VisualizerPage from './pages/VisualizerPage';
-import SummaryPage from './pages/SummaryPage'; // 🆕
+import SummaryPage from './pages/SummaryPage'; 
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
         <Route path="/pdf" element={<PDFGeneratorPage />} />
         <Route path="/qa" element={<QAView />} />
         <Route path="/docstring" element={<DocstringPage />} />
-        <Route path="/execute" element={<ExecutionPage />} />
+        <Route path="/executor" element={<ExecutionPage />} />
         <Route path="/visualizer" element={<VisualizerPage />} />
         <Route path="/summary" element={<SummaryPage />} /> 
       </Routes>

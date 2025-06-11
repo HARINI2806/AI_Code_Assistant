@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from retriever.retriever import retrieve_relevant_chunks
+from retriever.retriever import retrieve_code_chunks
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
@@ -21,7 +21,7 @@ def ask_question(request: QARequest):
     """
     try:
         # Step 1: Retrieve chunks
-        chunks = retrieve_relevant_chunks(request.question, top_k=request.top_k)
+        chunks = retrieve_code_chunks(request.question, top_k=request.top_k)
         context = "\n\n".join([c['text'] for c in chunks])
 
         # Step 2: Prompt LLM

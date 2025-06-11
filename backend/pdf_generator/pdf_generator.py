@@ -1,64 +1,64 @@
+# pdf_generator/pdf_generator.py
+
 import os
-import asyncio
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.pdfgen import canvas
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import inch
+
 from summarizer.summary_generator import generate_summaries
 
-def generate_pdf_from_codebase(codebase_path: str, output_pdf_path: str = "output/tutorial.pdf"):
-    os.makedirs(os.path.dirname(output_pdf_path), exist_ok=True)
-    doc = SimpleDocTemplate(output_pdf_path, pagesize=letter, leftMargin=50, rightMargin=50, topMargin=50, bottomMargin=50)
-    
-    styles = getSampleStyleSheet()
-    title_style = styles["Title"]
-    heading_style = styles["Heading2"]
-    code_style = styles["Code"]
-    normal_style = styles["BodyText"]
+DEFAULT_CODEBASE_PATH = "./sample-codebase"
+PDF_OUTPUT_PATH = "output/codebase_summary.pdf"
 
-    story = []
+# Custom styles
+styles = getSampleStyleSheet()
+styles.add(ParagraphStyle(name="TitleCenter", parent=styles["Heading1"], alignment=TA_CENTER, fontSize=20))
+styles.add(ParagraphStyle(name="FileSubtitle", parent=styles["Heading2"], textColor="blue", fontSize=14))
+styles.add(ParagraphStyle(name="NormalText", parent=styles["BodyText"], fontSize=11, leading=14))
 
-    # 📌 Title Page
-    story.append(Paragraph("📘 Codebase Summary", title_style))
-    story.append(Spacer(1, 0.3 * inch))
-    story.append(Paragraph(f"Path: {codebase_path}", normal_style))
-    story.append(Spacer(1, 0.5 * inch))
+def build_toc(summaries: str):
+    lines = summaries.splitlines()
+    toc = ["Table of Contents", ""]
+    for line in lines:
+        if line.strip().startswith("### Summary for"):
+            toc.append(line.strip())
+    return toc
 
-    # ✅ Generate summaries
-    summaries = asyncio.run(generate_summaries(codebase_path))
+async def generate_pdf_from_codebase(codebase_path: str = DEFAULT_CODEBASE_PATH) -> str:
+    summaries = await generate_summaries(codebase_path)
+    if not summaries.strip():
+        raise ValueError("No summaries generated.")
 
-    # ✅ Build TOC and group summaries by file
-    file_summary_map = {}
-    for item in summaries:
-        file_summary_map.setdefault(item['file'], []).append(item)
+    doc = SimpleDocTemplate(PDF_OUTPUT_PATH, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
+    content = []
 
-    toc_entries = []
+    # Title page
+    content.append(Paragraph("Codebase Tutorial Summary", styles["TitleCenter"]))
+    content.append(Spacer(1, 0.3 * inch))
 
-    for file_path, chunks in file_summary_map.items():
-        toc_entries.append(file_path)
-        story.append(PageBreak())
+    # Table of Contents
+    toc_lines = build_toc(summaries)
+    for line in toc_lines:
+        content.append(Paragraph(line, styles["NormalText"]))
+    content.append(PageBreak())
 
-        # 📄 File heading
-        story.append(Paragraph(f"📁 {file_path}", heading_style))
-        story.append(Spacer(1, 0.2 * inch))
+    # Body
+    for line in summaries.splitlines():
+        if line.startswith("# "):
+            content.append(Paragraph(line[2:], styles["TitleCenter"]))
+        elif line.startswith("### Summary for"):
+            content.append(PageBreak())
+            content.append(Paragraph(line.replace("###", "").strip(), styles["FileSubtitle"]))
+            content.append(Spacer(1, 0.2 * inch))
+        elif line.startswith("- "):
+            content.append(Paragraph(line, styles["NormalText"]))
+            content.append(Spacer(1, 0.1 * inch))
+        elif line.strip():
+            content.append(Paragraph(line, styles["NormalText"]))
+        else:
+            content.append(Spacer(1, 0.1 * inch))
 
-        for item in chunks:
-            summary_text = item["summary"].strip()
-            if not summary_text:
-                continue
-
-            story.append(Paragraph(f"🔹 Chunk {item['chunk_index']}", styles["Heading4"]))
-            story.append(Spacer(1, 0.1 * inch))
-            story.append(Paragraph(summary_text, normal_style))
-            story.append(Spacer(1, 0.2 * inch))
-
-    # 📑 Table of Contents
-    doc.build(
-        [Paragraph("📑 Table of Contents", title_style)] +
-        [Spacer(1, 0.2 * inch)] +
-        [Paragraph(f"{i + 1}. {toc}", normal_style) for i, toc in enumerate(toc_entries)] +
-        [PageBreak()] +
-        story
-    )
+    doc.build(content)
+    return PDF_OUTPUT_PATH

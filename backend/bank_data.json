@@ -1,0 +1,32 @@
+{
+  "Alice": {
+    "balance": 800,
+    "transactions": [
+      {
+        "amount": 1000,
+        "type": "deposit",
+        "timestamp": "2025-06-11T23:13:41.441568"
+      },
+      {
+        "amount": 200,
+        "type": "withdrawal",
+        "timestamp": "2025-06-11T23:13:41.441568"
+      }
+    ]
+  },
+  "Bob": {
+    "balance": 700,
+    "transactions": [
+      {
+        "amount": 500,
+        "type": "deposit",
+        "timestamp": "2025-06-11T23:13:41.441568"
+      },
+      {
+        "amount": 200,
+        "type": "deposit",
+        "timestamp": "2025-06-11T23:13:41.441568"
+      }
+    ]
+  }
+}

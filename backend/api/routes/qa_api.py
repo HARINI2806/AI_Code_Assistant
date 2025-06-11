@@ -22,7 +22,7 @@ def ask_question(request: QARequest):
     try:
         # Step 1: Retrieve chunks
         chunks = retrieve_code_chunks(request.question, top_k=request.top_k)
-        context = "\n\n".join([c['text'] for c in chunks])
+        context = "\n\n".join(chunks)
 
         # Step 2: Prompt LLM
         prompt = (

@@ -1,0 +1,20 @@
+graph TD
+exporter --> acc.get_balance
+transaction --> datetime.now
+main --> bank.create_account
+bank --> from_acc.withdraw
+main --> bank.transfer
+exporter --> open
+account --> Transaction
+main --> Bank
+main --> sample_run
+account --> t.to_dict
+exporter --> acc.get_statement
+bank --> ValueError
+main --> export_bank_data
+account --> ValueError
+exporter --> json.dump
+bank --> Account
+main --> bank.get_account
+bank --> self.get_account
+bank --> to_acc.deposit

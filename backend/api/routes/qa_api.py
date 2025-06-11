@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 router = APIRouter()
-llm = ChatOpenAI(model="gpt-4", temperature=0.3)
+llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0.3)
 
 class QARequest(BaseModel):
     question: str

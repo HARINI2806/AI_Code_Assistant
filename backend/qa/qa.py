@@ -23,7 +23,7 @@ def answer_question(question: str, k: int = 5) -> str:
 
     messages = build_prompt(chunks, question)
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4.1-mini",
         messages=messages
     )
     return response.choices[0].message.content.strip()

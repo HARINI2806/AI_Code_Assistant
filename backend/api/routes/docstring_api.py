@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, UploadFile, File, Form
 from fastapi.responses import JSONResponse
-from docstring_generator import add_docstrings, preview_docstrings
+from docstring_generator.docstring_generator import add_docstrings, preview_docstrings
 import os
 
 router = APIRouter()

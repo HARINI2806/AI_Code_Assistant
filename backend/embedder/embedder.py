@@ -5,6 +5,9 @@ from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SUPPORTED_EXTENSIONS = [".py", ".js", ".java"]
 DEFAULT_CODEBASE_DIR = "./sample-codebase"

@@ -12,3 +12,4 @@ reportlab
 chromadb
 python-dotenv
 routes
+langchain-openai

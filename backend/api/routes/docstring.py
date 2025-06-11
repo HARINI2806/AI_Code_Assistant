@@ -1,3 +1,10 @@
+from fastapi import APIRouter
+from pydantic import BaseModel
+import os
+from docstring_generator.docstring_generator import generate_docstrings_in_codebase
+
+router = APIRouter()
+
 class DocstringRequest(BaseModel):
     codebase_path: str = "./sample-codebase"
     output_dir: str = "./output/docstringified"

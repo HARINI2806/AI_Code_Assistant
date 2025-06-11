@@ -1,8 +1,6 @@
 fastapi
 uvicorn
 openai==0.28.1
-pydantic
-python-multipart
 tree-sitter
 tiktoken
 langchain
@@ -26,18 +24,5 @@ rich>=13.7.1
 
 # For async OpenAI Streaming
 httpx>=0.27.0
-fastapi
-uvicorn
-openai==0.28.1
-pydantic
-python-multipart
-tree-sitter
-tiktoken
-langchain
-langchain_community
-# ast
-reportlab
-chromadb
-python-dotenv
 routes
 langchain-openai

@@ -49,9 +49,11 @@ const FileUploader = () => {
         type="file"
         accept=".zip"
         onChange={handleFileChange}
-        className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 rounded px-4 py-2"
+        className="block mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 rounded px-4 py-2"
       />
+      <br/>
       <div className="flex gap-4">
+         <br/>
         <button
           onClick={handleUpload}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -65,6 +67,7 @@ const FileUploader = () => {
           Use Default Sample
         </button>
       </div>
+      <br />
       {status && (
         <p className="mt-4 text-sm text-blue-700 bg-blue-50 p-2 rounded">
           {status}

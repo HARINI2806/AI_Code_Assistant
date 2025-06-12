@@ -1,67 +1,101 @@
-// src/components/MermaidRenderer.js
-import React, { useState } from 'react';
+// src/components/MermaidRenderer.jsx
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import mermaid from 'mermaid';
 
+mermaid.initialize({ startOnLoad: false });
+
 const MermaidRenderer = () => {
-  const [diagram, setDiagram] = useState('');
-  const [renderedHtml, setRenderedHtml] = useState('');
+  const [diagramType, setDiagramType] = useState('class'); // or 'dependency'
+  const [diagramText, setDiagramText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [downloadLink, setDownloadLink] = useState('');
+  const diagramRef = useRef(null);
 
-  const generateDiagram = async () => {
+  useEffect(() => {
+    if (diagramText && diagramRef.current) {
+      renderMermaidDiagram(diagramText);
+    }
+  }, [diagramText]);
+
+  const renderMermaidDiagram = async (code) => {
     try {
-      const response = await axios.post('/api/visualizer/generate', {
-        type: 'class', // You could let the user choose type
-      });
-      setDiagram(response.data.diagram);
-
-      const { svg } = await mermaid.render('generatedDiagram', response.data.diagram);
-      setRenderedHtml(svg);
+      const { svg } = await mermaid.render('mermaid-diagram', code);
+      diagramRef.current.innerHTML = svg;
     } catch (err) {
-      setDiagram('');
-      setRenderedHtml('');
-      alert('Failed to generate diagram');
+      diagramRef.current.innerHTML = `<p class="text-red-500">Error rendering Mermaid diagram</p>`;
     }
   };
 
-  const download = async (format = 'svg') => {
-    const res = await axios.get(`/api/visualizer/download?format=${format}`, {
-      responseType: 'blob',
-    });
+  const generateDiagram = async () => {
+    setLoading(true);
+    setDiagramText('');
+    setDownloadLink('');
+    diagramRef.current.innerHTML = '';
 
-    const url = window.URL.createObjectURL(new Blob([res.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `diagram.${format}`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    try {
+      const endpoint =
+        diagramType === 'class'
+          ? '/api/visualizer/class-diagram'
+          : '/api/visualizer/dependency-graph';
+
+      const res = await axios.post(endpoint);
+      const filename = res.data.file.split('/').pop();
+
+      const fetchText = await axios.get(`/api/visualizer/download?file=${filename}`);
+      setDiagramText(fetchText.data);
+      setDownloadLink(`/api/visualizer/download?file=${filename}`);
+    } catch (err) {
+      alert('Error generating diagram: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-4">
-      <button onClick={generateDiagram} className="bg-blue-500 text-white px-4 py-2 rounded">
-        Generate Diagram
-      </button>
-      {diagram && (
+    <div className="p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded shadow w-full max-w-5xl mx-auto">
+      <h3 className="text-2xl font-semibold mb-4">Mermaid Diagram Generator</h3>
+
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <label htmlFor="type" className="text-sm">Diagram Type:</label>
+        <select
+          id="type"
+          className="p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          value={diagramType}
+          onChange={(e) => setDiagramType(e.target.value)}
+        >
+          <option value="class">Class Diagram</option>
+          <option value="dependency">Dependency Graph</option>
+        </select>
+
+        <button
+          onClick={generateDiagram}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
+        >
+          {loading ? 'Generating...' : 'Generate Diagram'}
+        </button>
+
+        {downloadLink && (
+          <a
+            href={downloadLink}
+            download
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Download .mmd
+          </a>
+        )}
+      </div>
+
+      {diagramText && (
         <>
           <div
-            className="bg-white p-4 border rounded"
-            dangerouslySetInnerHTML={{ __html: renderedHtml }}
+            ref={diagramRef}
+            className="bg-white dark:bg-gray-800 p-4 border rounded shadow overflow-auto"
           />
-          <div className="space-x-2">
-            <button
-              onClick={() => download('mmd')}
-              className="bg-gray-500 text-white px-3 py-1 rounded"
-            >
-              Download .mmd
-            </button>
-            <button
-              onClick={() => download('svg')}
-              className="bg-gray-700 text-white px-3 py-1 rounded"
-            >
-              Download .svg
-            </button>
-          </div>
+          <pre className="mt-4 text-sm bg-gray-100 dark:bg-gray-800 border p-3 rounded overflow-auto">
+            {diagramText}
+          </pre>
         </>
       )}
     </div>

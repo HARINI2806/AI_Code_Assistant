@@ -8,7 +8,7 @@ const EmbedderPage = () => {
       <h2 className="text-2xl font-semibold">Embed Your Codebase</h2>
       <FileUploader />
     </div>
-    /</div>
+    </div>
   );
 };
 

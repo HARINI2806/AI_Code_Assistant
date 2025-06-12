@@ -1,65 +1,81 @@
-# docstring_generator.py
+import ast
+import os
+from openai import AsyncOpenAI
 
-import difflib
-import re
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def add_docstrings(code: str, language: str = "python") -> str:
-    if language.lower() == "python":
-        return _add_python_docstrings(code)
-    elif language.lower() in {"javascript", "java"}:
-        return _add_generic_docstrings(code, language.lower())
-    else:
-        raise ValueError("Unsupported language")
+SUPPORTED_LANGUAGES = {"python", "javascript", "java"}
 
-def _add_python_docstrings(code: str) -> str:
-    lines = code.splitlines()
-    new_lines = []
-    i = 0
+def extract_python_targets(source_code: str) -> list[dict]:
+    """Find Python functions or classes without docstrings."""
+    tree = ast.parse(source_code)
+    targets = []
 
-    while i < len(lines):
-        line = lines[i]
-        new_lines.append(line)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if ast.get_docstring(node) is None:
+                targets.append({
+                    "name": node.name,
+                    "start": node.lineno,
+                    "type": type(node).__name__,
+                })
+    return targets
 
-        if re.match(r"^\s*def\s+\w+\(.*\):", line):
-            indent = " " * (len(line) - len(line.lstrip()) + 4)
-            docstring = f'{indent}"""Function documentation."""'
-            if i + 1 >= len(lines) or '"""' not in lines[i + 1]:
-                new_lines.append(docstring)
-
-        elif re.match(r"^\s*class\s+\w+\(?.*?\)?:", line):
-            indent = " " * (len(line) - len(line.lstrip()) + 4)
-            docstring = f'{indent}"""Class documentation."""'
-            if i + 1 >= len(lines) or '"""' not in lines[i + 1]:
-                new_lines.append(docstring)
-
-        i += 1
-
-    return "\n".join(new_lines)
-
-def _add_generic_docstrings(code: str, language: str) -> str:
-    pattern = {
-        "javascript": r"^\s*function\s+\w+\(.*\)\s*\{",
-        "java": r"^\s*(public|private|protected)?\s*(static)?\s*\w+\s+\w+\(.*\)\s*\{"
-    }[language]
-
-    lines = code.splitlines()
-    new_lines = []
-    for i, line in enumerate(lines):
-        new_lines.append(line)
-        if re.match(pattern, line):
-            indent = " " * (len(line) - len(line.lstrip()))
-            comment = {
-                "javascript": f"{indent}/** Function documentation */",
-                "java": f"{indent}/** Function documentation */"
-            }[language]
-            new_lines.append(comment)
-
-    return "\n".join(new_lines)
-
-def preview_docstrings(original_code: str, language: str = "python") -> str:
-    updated_code = add_docstrings(original_code, language)
-    diff = difflib.unified_diff(
-        original_code.splitlines(), updated_code.splitlines(),
-        fromfile="original", tofile="updated", lineterm=""
+async def generate_docstring(code_snippet: str, language: str = "python") -> str:
+    prompt = f"Generate a {language} docstring for the following {language} code:\n\n{code_snippet}"
+    res = await client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
     )
-    return "\n".join(diff)
+    return res.choices[0].message.content.strip()
+
+async def insert_docstring(code: str, target: dict, docstring: str, language: str = "python") -> str:
+    lines = code.splitlines()
+    index = target["start"]
+    indent = len(lines[index - 1]) - len(lines[index - 1].lstrip())
+
+    if language == "python":
+        doc_line = f'{" " * (indent + 4)}""" {docstring} """'
+        lines.insert(index, doc_line)
+
+    elif language == "javascript":
+        comment_lines = [' ' * (indent + 2) + line for line in format_jsdoc(docstring).split("\n")]
+        lines.insert(index, "\n".join(comment_lines))
+
+    elif language == "java":
+        comment_lines = [' ' * (indent + 2) + line for line in format_javadoc(docstring).split("\n")]
+        lines.insert(index, "\n".join(comment_lines))
+
+    return "\n".join(lines)
+
+def format_jsdoc(text: str) -> str:
+    return "/**\n" + "\n".join([f" * {line}" for line in text.split("\n")]) + "\n */"
+
+def format_javadoc(text: str) -> str:
+    return "/**\n" + "\n".join([f" * {line}" for line in text.split("\n")]) + "\n */"
+
+async def batch_generate_docstrings(source_code: str, language: str = "python") -> dict:
+    assert language.lower() in SUPPORTED_LANGUAGES, f"Unsupported language: {language}"
+    updated_code = source_code
+
+    if language == "python":
+        targets = extract_python_targets(source_code)
+    else:
+        # fallback: line-based detection for JS/Java (simple)
+        targets = []
+        for i, line in enumerate(source_code.splitlines()):
+            if ("function" in line or "class" in line) and not line.strip().startswith("//"):
+                targets.append({"start": i + 1, "name": f"block@{i}", "type": "Function"})
+
+    # Insert all docstrings
+    for target in reversed(targets):  # bottom-up to preserve line numbers
+        snippet = "\n".join(updated_code.splitlines()[target["start"] - 1: target["start"] + 5])
+        docstring = await generate_docstring(snippet, language)
+        updated_code = await insert_docstring(updated_code, target, docstring, language)
+
+    return {
+        "original": source_code,
+        "modified": updated_code,
+        "modified_functions": [t["name"] for t in targets]
+    }

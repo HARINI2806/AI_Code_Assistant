@@ -28,3 +28,11 @@ async def download_pdf():
     if not os.path.exists(PDF_OUTPUT_PATH):
         raise HTTPException(status_code=404, detail="PDF not found. Please generate it first.")
     return FileResponse(path=PDF_OUTPUT_PATH, filename="codebase_summary.pdf", media_type="application/pdf")
+
+@router.get("/pdf/codebases")
+def list_codebases():
+    folder = "./sample-codebase"
+    try:
+        return {"codebases": [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

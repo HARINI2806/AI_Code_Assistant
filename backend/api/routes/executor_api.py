@@ -2,7 +2,8 @@
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from executor.runner import run_function_from_codebase
+from executor.runner import run_function_from_codebase, find_runnable_python_files
+import os
 
 router = APIRouter()
 
@@ -24,3 +25,13 @@ async def execute_function(req: ExecuteRequest):
         return {"output": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/runnable-files")
+async def get_runnable_files():
+    """Get list of runnable Python files (directories with main.py)"""
+    try:
+        base_path = "./sample-codebase"
+        runnable_files = find_runnable_python_files(base_path)
+        return {"runnable_files": runnable_files}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error finding runnable files: {str(e)}")

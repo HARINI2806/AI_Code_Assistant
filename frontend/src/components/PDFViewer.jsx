@@ -1,4 +1,4 @@
-// Enhanced additions to PDFViewer.jsx
+// Enhanced PDFViewer.jsx with fixed search and sidebar
 import React, { useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
@@ -12,18 +12,21 @@ pdfjs.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@3.11.174/bui
 const PDFViewer = () => {
   const [paths, setPaths] = useState([]);
   const [selectedPath, setSelectedPath] = useState('ALL');
-  const [pdfFile, setPdfFile] = useState(null); // Changed from pdfUrl to pdfFile
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfDocument, setPdfDocument] = useState(null); // Store the PDF document instance
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.2);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [matches, setMatches] = useState([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const viewerRef = useRef();
 
-  const [fileList, setFileList] = useState([]); // sidebar filenames
+  const [fileList, setFileList] = useState([]);
 
   useEffect(() => {
     axios.get('http://localhost:8000/pdf/pdf/codebases').then(res => {
@@ -43,21 +46,58 @@ const PDFViewer = () => {
     };
   }, [pdfFile]);
 
+  const extractFileListFromPDF = async (pdfDoc) => {
+    try {
+      const files = [];
+      
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        
+        // Look for file patterns in the text
+        const filePatterns = [
+          /### Summary for (.+?)(?:\n|$)/g,
+          /File: (.+?)(?:\n|$)/g,
+          /^(.+\.(py|js|jsx|java|cpp|c|h|ts|tsx|html|css|json|xml|yml|yaml|md|txt))$/gm
+        ];
+        
+        filePatterns.forEach(pattern => {
+          let match;
+          while ((match = pattern.exec(pageText)) !== null) {
+            const fileName = match[1].trim();
+            if (fileName && !files.includes(fileName)) {
+              files.push(fileName);
+            }
+          }
+        });
+      }
+      
+      setFileList([...new Set(files)].sort());
+    } catch (err) {
+      console.warn('Could not extract file list from PDF:', err);
+      setFileList([]);
+    }
+  };
+
   const handleGenerate = async () => {
     try {
       setLoading(true);
       setError(null);
       setPageNumber(1);
       setPdfFile(null);
+      setPdfDocument(null);
       setNumPages(null);
       setFileList([]);
+      setMatches([]);
+      setSearchTerm('');
 
       // Generate PDF
       await axios.post('http://localhost:8000/pdf/pdf', { codebase_path: selectedPath });
 
       // Download PDF as blob
       const response = await axios.get('http://localhost:8000/pdf/pdf/download', {
-        responseType: 'blob', // Changed from 'arraybuffer' to 'blob'
+        responseType: 'blob',
       });
 
       // Create blob URL for the PDF
@@ -65,8 +105,6 @@ const PDFViewer = () => {
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setPdfFile(pdfUrl);
 
-      // Try to extract file list (this might need adjustment based on your backend)
-      // extractFileList('output/codebase_summary.pdf');
     } catch (err) {
       console.error('Failed to generate or load PDF:', err);
       setError('Failed to generate or load PDF: ' + (err.response?.data?.detail || err.message));
@@ -75,38 +113,57 @@ const PDFViewer = () => {
     }
   };
 
-  const extractFileList = async (pdfPath) => {
-    try {
-      const txtRes = await axios.get(`/api/pdf/text?file=${encodeURIComponent(pdfPath)}`);
-      const files = [...txtRes.data.matchAll(/^### File: (.+)$/gm)].map(m => m[1]);
-      setFileList(files);
-    } catch (e) {
-      console.warn('Could not load file summary list');
-    }
-  };
-
   const handleSearch = async () => {
-    if (!pdfFile || !searchTerm.trim()) return;
+    if (!pdfDocument || !searchTerm.trim()) {
+      setMatches([]);
+      return;
+    }
 
     try {
-      setLoading(true);
-      const loadingPdf = await pdfjs.getDocument(pdfFile).promise;
-      const foundPages = [];
+      setSearchLoading(true);
+      setError(null);
+      const foundMatches = [];
+      const searchTermLower = searchTerm.toLowerCase();
 
-      for (let i = 1; i <= loadingPdf.numPages; i++) {
-        const page = await loadingPdf.getPage(i);
-        const content = await page.getTextContent();
-        const fullText = content.items.map(it => it.str).join(' ').toLowerCase();
-        if (fullText.includes(searchTerm.toLowerCase())) foundPages.push(i);
+      for (let i = 1; i <= pdfDocument.numPages; i++) {
+        const page = await pdfDocument.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ').toLowerCase();
+        
+        if (pageText.includes(searchTermLower)) {
+          foundMatches.push(i);
+        }
       }
 
-      setMatches(foundPages);
-      if (foundPages.length) setPageNumber(foundPages[0]);
+      setMatches(foundMatches);
+      setCurrentMatchIndex(0);
+      
+      if (foundMatches.length > 0) {
+        setPageNumber(foundMatches[0]);
+      } else {
+        setError(`No matches found for "${searchTerm}"`);
+      }
     } catch (err) {
       console.error('Search failed:', err);
       setError('Search failed: ' + err.message);
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
+    }
+  };
+
+  const handleNextMatch = () => {
+    if (matches.length > 0) {
+      const nextIndex = (currentMatchIndex + 1) % matches.length;
+      setCurrentMatchIndex(nextIndex);
+      setPageNumber(matches[nextIndex]);
+    }
+  };
+
+  const handlePrevMatch = () => {
+    if (matches.length > 0) {
+      const prevIndex = currentMatchIndex === 0 ? matches.length - 1 : currentMatchIndex - 1;
+      setCurrentMatchIndex(prevIndex);
+      setPageNumber(matches[prevIndex]);
     }
   };
 
@@ -132,14 +189,32 @@ const PDFViewer = () => {
     }
   };
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
+  const onDocumentLoadSuccess = async ({ numPages }) => {
     setNumPages(numPages);
     setError(null);
+    
+    // Get the PDF document instance for search functionality
+    try {
+      const pdfDoc = await pdfjs.getDocument(pdfFile).promise;
+      setPdfDocument(pdfDoc);
+      
+      // Extract file list from the PDF content
+      await extractFileListFromPDF(pdfDoc);
+    } catch (err) {
+      console.error('Failed to process PDF document:', err);
+    }
   };
 
   const onDocumentLoadError = (error) => {
     console.error("PDF load error:", error);
     setError('Failed to load PDF: ' + error.message);
+    setPdfDocument(null);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -148,15 +223,21 @@ const PDFViewer = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="mb-4 p-3 background-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
+          <button 
+            onClick={() => setError(null)} 
+            className="ml-2 text-red-500 hover:text-red-700"
+          >
+            ×
+          </button>
         </div>
       )}
 
       {/* Loading Indicator */}
       {loading && (
         <div className="mb-4 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded">
-          Loading...
+          Generating PDF...
         </div>
       )}
 
@@ -173,28 +254,53 @@ const PDFViewer = () => {
           ))}
         </select>
 
-        <input
-          type="text"
-          placeholder="Search in PDF..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
-          disabled={!pdfFile || loading}
-        />
-        <button 
-          onClick={handleSearch} 
-          className="bg-blue-500 text-white px-3 py-1 rounded disabled:opacity-50"
-          disabled={!pdfFile || loading}
-        >
-          Search
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Search in PDF..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
+            disabled={!pdfDocument || loading}
+          />
+          <button 
+            onClick={handleSearch} 
+            className="bg-blue-500 text-white px-3 py-2 rounded disabled:opacity-50 hover:bg-blue-600"
+            disabled={!pdfDocument || loading || searchLoading}
+          >
+            {searchLoading ? 'Searching...' : 'Search'}
+          </button>
+          
+          {matches.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {matches.length} match{matches.length !== 1 ? 'es' : ''} ({currentMatchIndex + 1}/{matches.length})
+              </span>
+              <button 
+                onClick={handlePrevMatch}
+                className="bg-gray-300 dark:bg-gray-700 px-2 py-1 rounded text-sm"
+                disabled={matches.length <= 1}
+              >
+                ↑
+              </button>
+              <button 
+                onClick={handleNextMatch}
+                className="bg-gray-300 dark:bg-gray-700 px-2 py-1 rounded text-sm"
+                disabled={matches.length <= 1}
+              >
+                ↓
+              </button>
+            </div>
+          )}
+        </div>
 
         <button 
           onClick={handleGenerate} 
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? 'Generating...' : 'Generate'}
+          {loading ? 'Generating...' : 'Generate PDF'}
         </button>
         
         <button 
@@ -215,7 +321,7 @@ const PDFViewer = () => {
         
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)} 
-          className="bg-gray-300 dark:bg-gray-700 px-3 py-2 rounded"
+          className="bg-gray-300 dark:bg-gray-700 px-3 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
         >
           {sidebarOpen ? 'Hide' : 'Show'} Sidebar
         </button>
@@ -225,55 +331,82 @@ const PDFViewer = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           {sidebarOpen && (
-            <div className="w-full lg:w-64 bg-gray-100 dark:bg-gray-800 border p-2 rounded overflow-auto max-h-[80vh]">
-              <h4 className="font-semibold mb-2">Files Covered</h4>
-              <ul className="text-sm list-disc pl-5">
-                {fileList.map((file, i) => (
-                  <li key={i}>{file}</li>
-                ))}
-              </ul>
-
-              {matches.length > 0 && (
-                <>
-                  <h4 className="font-semibold mt-4 mb-1">Search Matches</h4>
-                  <ul className="text-xs text-blue-500">
-                    {matches?.map((p) => (
-                      <li key={p} className="cursor-pointer hover:underline" onClick={() => setPageNumber(p)}>
-                        Page {p}
+            <div className="w-full lg:w-80 bg-gray-100 dark:bg-gray-800 border p-4 rounded overflow-auto max-h-[80vh]">
+              <div className="mb-4">
+                <h4 className="font-semibold mb-3 text-lg">Files Covered</h4>
+                {fileList.length > 0 ? (
+                  <ul className="text-sm space-y-1">
+                    {fileList.map((file, i) => (
+                      <li key={i} className="p-2 bg-white dark:bg-gray-700 rounded border-l-4 border-blue-500">
+                        <span className="font-mono text-xs text-blue-600 dark:text-blue-400">
+                          {file}
+                        </span>
                       </li>
                     ))}
                   </ul>
-                </>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                    {pdfDocument ? 'No files detected' : 'Generate PDF to see files'}
+                  </p>
+                )}
+              </div>
+
+              {matches.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-3 text-lg">Search Results</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    Found "{searchTerm}" on {matches.length} page{matches.length !== 1 ? 's' : ''}
+                  </p>
+                  <ul className="text-sm space-y-1">
+                    {matches.map((pageNum, index) => (
+                      <li key={pageNum}>
+                        <button
+                          className={`w-full text-left p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-800 ${
+                            index === currentMatchIndex 
+                              ? 'bg-blue-200 dark:bg-blue-700 font-semibold' 
+                              : 'bg-white dark:bg-gray-700'
+                          }`}
+                          onClick={() => {
+                            setPageNumber(pageNum);
+                            setCurrentMatchIndex(index);
+                          }}
+                        >
+                          Page {pageNum}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}
 
           {/* Viewer */}
           <div className="flex-1 flex flex-col items-center">
-            <div className="flex gap-4 mb-4">
+            <div className="flex gap-4 mb-4 items-center">
               <button 
                 onClick={() => setScale((s) => Math.max(0.5, s - 0.2))} 
-                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded"
+                className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 −
               </button>
-              <span className="text-sm">Zoom: {(scale * 100).toFixed(0)}%</span>
+              <span className="text-sm font-medium">Zoom: {(scale * 100).toFixed(0)}%</span>
               <button 
                 onClick={() => setScale((s) => Math.min(3, s + 0.2))} 
-                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded"
+                className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 +
               </button>
             </div>
 
-            <div ref={viewerRef} className="max-w-4xl border bg-white dark:bg-gray-800 p-4 rounded shadow">
+            <div ref={viewerRef} className="max-w-4xl border bg-white dark:bg-gray-800 p-4 rounded shadow-lg">
               <Document
                 file={pdfFile}
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
-                loading={<div className="p-4 text-center">Loading PDF...</div>}
-                error={<div className="p-4 text-center text-red-500">Failed to load PDF</div>}
-                noData={<div className="p-4 text-center">No PDF loaded</div>}
+                loading={<div className="p-8 text-center">Loading PDF...</div>}
+                error={<div className="p-8 text-center text-red-500">Failed to load PDF</div>}
+                noData={<div className="p-8 text-center">No PDF loaded</div>}
               >
                 <Page 
                   pageNumber={pageNumber} 
@@ -285,19 +418,21 @@ const PDFViewer = () => {
             </div>
 
             {numPages && (
-              <div className="flex justify-between items-center mt-4 w-full max-w-sm">
+              <div className="flex justify-between items-center mt-4 w-full max-w-md">
                 <button 
                   onClick={() => setPageNumber((p) => Math.max(1, p - 1))} 
                   disabled={pageNumber === 1} 
-                  className="bg-gray-300 dark:bg-gray-700 px-4 py-1 rounded disabled:opacity-50"
+                  className="bg-gray-300 dark:bg-gray-700 px-4 py-2 rounded disabled:opacity-50 hover:bg-gray-400 dark:hover:bg-gray-600"
                 >
-                  Prev
+                  Previous
                 </button>
-                <span>Page {pageNumber} of {numPages}</span>
+                <span className="font-medium">
+                  Page {pageNumber} of {numPages}
+                </span>
                 <button 
                   onClick={() => setPageNumber((p) => Math.min(numPages, p + 1))} 
                   disabled={pageNumber === numPages} 
-                  className="bg-gray-300 dark:bg-gray-700 px-4 py-1 rounded disabled:opacity-50"
+                  className="bg-gray-300 dark:bg-gray-700 px-4 py-2 rounded disabled:opacity-50 hover:bg-gray-400 dark:hover:bg-gray-600"
                 >
                   Next
                 </button>

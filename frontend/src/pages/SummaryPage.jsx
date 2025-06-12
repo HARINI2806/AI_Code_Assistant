@@ -6,7 +6,7 @@ const SummaryPage = () => {
   return (
      <div className="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
     <div className="p-6">
-      <h2 className="text-2xl font-semibold">Codebase Summary</h2>
+      <h2 className="text-2xl font-semibold">New Code/Code Change Impact Analysis</h2>
       <SummaryViewer />
     </div>
     </div>

@@ -39,7 +39,7 @@ const toggleDarkMode = () => {
     { to: '/docstring', label: 'Docstrings' },
     { to: '/executor', label: 'Execute' },
     { to: '/visualizer', label: 'Visualize' },
-    { to: '/summary', label: 'Summary' }
+    { to: '/summary', label: 'Impact Analysis' }
   ];
 
   return (

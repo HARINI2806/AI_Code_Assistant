@@ -1,101 +1,131 @@
-// src/components/SummaryViewer.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Editor from '@monaco-editor/react';
 
 const SummaryViewer = () => {
   const [codebases, setCodebases] = useState([]);
   const [selectedPath, setSelectedPath] = useState('');
-  const [summaries, setSummaries] = useState([]);
+  const [mode, setMode] = useState('code'); // 'code', 'upload', 'dropdown'
+
+  const [newCode, setNewCode] = useState('');
+  const [uploadFile, setUploadFile] = useState(null);
+  const [impactSummary, setImpactSummary] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // fetch codebase folders
-    const fetchCodebases = async () => {
-      try {
-        const res = await axios.get('http://localhost:8000/pdf/pdf/codebases');
-        setCodebases(res.data.codebases);
-        setSelectedPath(res.data.codebases[0] || '');
-      } catch (err) {
-        console.error('Failed to fetch codebases:', err);
-      }
-    };
-    fetchCodebases();
+    axios.get('http://localhost:8000/execute/runnable-files').then(res => {
+      setCodebases(res.data.runnable_files);
+      setSelectedPath(res.data.codebases[0] || '');
+    });
   }, []);
 
-  const fetchSummary = async () => {
-    if (!selectedPath) return;
+  useEffect(() => {
+    if (mode === 'dropdown' && selectedPath) {
+      const normalizedPath = selectedPath.replace(/\\/g, '/');
+      axios
+        .get(`http://localhost:8000/summary/codebase/file?path=${normalizedPath}`)
+        .then((res) => setNewCode(res.data.code))
+        .catch((err) => console.error('Failed to load file:', err));
+        setLoading(false)
+    }
+  }, [selectedPath, mode]);
+
+  const handleGenerateImpact = async () => {
     setLoading(true);
-    setSummaries([]);
+    setImpactSummary('');
+
+    const form = new FormData();
+
+    if (mode === 'upload') {
+      if (!uploadFile) return;
+      form.append('file', uploadFile);
+    } else if (mode === 'code') {
+      if (!newCode.trim()) return;
+      form.append('code', newCode);
+    } else if (mode === 'dropdown') {
+      if (!newCode.trim()) return;
+      form.append('code', newCode);
+      form.append('file_path', selectedPath);
+    }
 
     try {
-      const res = await axios.post('http://localhost:8000/summary/summary', {
-        codebase_path: `./sample-codebase/${selectedPath}`,
+      const res = await axios.post('http://localhost:8000/summary/summary/impact', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
-      const summaryList = Array.isArray(res.data.summary)
-      ? res.data.summary
-      : [res.data.summary];
-    setSummaries(summaryList);
-      console.log(summaryList)
-    } catch (error) {
-      console.error('Error fetching summary:', error);
+      setImpactSummary(res.data.impact_summary);
+    } catch (err) {
+      console.error('Impact summary error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded shadow space-y-4">
+    <div className="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 space-y-4 min-h-screen">
     
-      <div className="flex gap-4 items-center">
-        <label>Codebase:</label>
+      <div className="flex flex-wrap gap-4 items-center">
+        <label>Mode:</label>
         <select
-          value={selectedPath}
-          onChange={(e) => setSelectedPath(e.target.value)}
+          value={mode}
+          onChange={(e) => {setMode(e.target.value); setImpactSummary(''); setNewCode(''); setUploadFile(null)}}
           className="p-2 border rounded bg-white dark:bg-gray-800"
         >
-          {codebases.map((cb) => (
-            <option key={cb} value={cb}>
-              {cb}
-            </option>
-          ))}
+          <option value="code">Paste Code</option>
+          <option value="upload">Upload File</option>
+          <option value="dropdown">Select Existing File</option>
         </select>
 
+        {mode === 'dropdown' && (
+          <select
+            value={selectedPath}
+            onChange={(e) => setSelectedPath(e.target.value)}
+            className="p-2 border rounded bg-white dark:bg-gray-800"
+          >
+            {codebases?.map((cb) => (
+              <option key={cb} value={cb}>{cb}</option>
+            ))}
+          </select>
+        )}
+
         <button
-          onClick={fetchSummary}
+          onClick={handleGenerateImpact}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Generate Summary
+          Analyze Impact
         </button>
       </div>
 
-      {loading && <p>Loading summary...</p>}
+      {mode === 'upload' && (
+        <input
+          type="file"
+          accept=".py,.js,.java"
+          onChange={(e) => setUploadFile(e.target.files[0])}
+          className="p-2"
+        />
+      )}
 
-      {loading && <p>Generating summary...</p>}
-
-      {summaries.length > 0 && (
-        <div className="space-y-4 mt-4">
-          {summaries.map((text, index) => (
-            <div
-              key={index}
-              className="p-4 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow"
-            >
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-300">
-                Summary {index + 1}
-              </h3>
-              <p className="mt-2 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                {text}
-              </p>
-            </div>
-          ))}
+      {(mode === 'code' || mode === 'dropdown') && (
+        <div className="mt-4">
+          <Editor
+            height="400px"
+            language="python"
+            value={newCode}
+            theme="vs-dark"
+            onChange={(value) => setNewCode(value || '')}
+            className="rounded border"
+          />
         </div>
       )}
 
+      {loading && <p>Generating business logic impact...</p>}
 
-      {!loading && summaries.length === 0 && (
-        <p className="text-sm text-gray-500">
-          No summary available. Click "Generate Summary" to fetch one.
-        </p>
+      {impactSummary && (
+        <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded">
+          <h3 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">
+            Business Logic Impact Summary
+          </h3>
+          <pre className="whitespace-pre-wrap text-sm">{impactSummary}</pre>
+        </div>
       )}
     </div>
   );

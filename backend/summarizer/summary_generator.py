@@ -5,6 +5,7 @@ import asyncio
 import aiofiles
 from openai import AsyncOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import difflib
 
 SUPPORTED_EXTENSIONS = [".py", ".js", ".java"]
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -75,3 +76,30 @@ async def generate_summaries(path: str) -> str:
 
     raise ValueError(f"Path '{path}' is neither a file nor a folder.")
 
+def compute_diff(original: str, modified: str) -> str:
+    original_lines = original.splitlines(keepends=True)
+    modified_lines = modified.splitlines(keepends=True)
+    diff = difflib.unified_diff(original_lines, modified_lines, fromfile='original', tofile='modified')
+    return ''.join(diff)
+
+async def generate_impact_summary(modified_code: str, original_code: str | None = None) -> str:
+    if original_code:
+        diff = compute_diff(original_code, modified_code)
+        prompt = (
+            "The following diff shows changes made to code in a software system.\n\n"
+            f"{diff}\n\n"
+            "Explain the impact of these changes on the system’s business logic. Be concise and specific."
+        )
+    else:
+        prompt = (
+            "Analyze the following code and describe what business logic it implements.\n\n"
+            f"{modified_code}"
+        )
+
+    res = await client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+    )
+
+    return res.choices[0].message.content.strip()

@@ -1,53 +1,124 @@
-// src/components/PDFViewer.js
-import React, { useState } from 'react';
-import axios from 'axios';
-import { Worker, Viewer } from '@react-pdf-viewer/core';
-import '@react-pdf-viewer/core/lib/styles/index.css';
+// src/components/PDFViewer.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
-const PDFViewer = () => {
-  const [pdfUrl, setPdfUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-  const generatePDF = async () => {
-    try {
-      setLoading(true);
-      await axios.post('/api/pdf/generate');
-      setPdfUrl('/api/pdf/download');
-    } catch (err) {
-      alert('Error generating PDF: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
+const PDFViewer = ({ fileUrl, downloadUrl }) => {
+  const [numPages, setNumPages] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [scale, setScale] = useState(1.2);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const viewerRef = useRef();
+
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+    setPageNumber(1);
   };
 
-  const downloadPDF = () => {
-    window.open('/api/pdf/download', '_blank');
+  const goToPage = (page) => {
+    setPageNumber(page);
+    viewerRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const zoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
+  const zoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.6));
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  const handlePrint = () => {
+    const printWindow = window.open(fileUrl, '_blank');
+    printWindow?.focus();
+    printWindow?.print();
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow-md w-full max-w-5xl mx-auto">
-      <div className="flex items-center gap-4 mb-4">
-        <button
-          onClick={generatePDF}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {loading ? 'Generating...' : 'Generate PDF'}
-        </button>
-        <button
-          onClick={downloadPDF}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Download PDF
-        </button>
-      </div>
-
-      {pdfUrl && (
-        <div className="border mt-4" style={{ height: '700px' }}>
-          <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
-            <Viewer fileUrl={pdfUrl} />
-          </Worker>
+    <div className="flex flex-col md:flex-row gap-4">
+      {sidebarOpen && (
+        <div className="flex md:flex-col gap-2 p-2 border rounded bg-gray-50 max-h-[80vh] md:w-40 overflow-auto">
+          {Array.from({ length: numPages }, (_, index) => (
+            <div
+              key={`thumb_${index + 1}`}
+              onClick={() => goToPage(index + 1)}
+              className={`cursor-pointer border rounded ${pageNumber === index + 1 ? 'border-blue-500' : 'border-gray-300'}`}
+            >
+              <Document file={fileUrl}>
+                <Page
+                  pageNumber={index + 1}
+                  width={100}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                />
+              </Document>
+            </div>
+          ))}
         </div>
       )}
+
+      <div className="flex-1 flex flex-col items-center">
+        {/* Controls */}
+        <div className="flex flex-wrap gap-3 justify-between items-center w-full mb-4">
+          <div className="flex gap-2">
+            <button onClick={zoomOut} className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">-</button>
+            <span className="text-sm">Zoom: {(scale * 100).toFixed(0)}%</span>
+            <button onClick={zoomIn} className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">+</button>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={toggleSidebar}
+              className="bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 text-sm"
+            >
+              {sidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+            </button>
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+            >
+              Download PDF
+            </a>
+            <button
+              onClick={handlePrint}
+              className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+            >
+              Print
+            </button>
+          </div>
+        </div>
+
+        {/* Viewer */}
+        <div ref={viewerRef} className="border shadow p-4 bg-white rounded">
+          <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess}>
+            <Page pageNumber={pageNumber} scale={scale} />
+          </Document>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4 flex justify-between w-full max-w-sm">
+          <button
+            className="bg-blue-500 text-white px-4 py-1 rounded disabled:opacity-50"
+            onClick={() => goToPage(pageNumber - 1)}
+            disabled={pageNumber <= 1}
+          >
+            Prev
+          </button>
+          <p>
+            Page {pageNumber} of {numPages}
+          </p>
+          <button
+            className="bg-blue-500 text-white px-4 py-1 rounded disabled:opacity-50"
+            onClick={() => goToPage(pageNumber + 1)}
+            disabled={pageNumber >= numPages}
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

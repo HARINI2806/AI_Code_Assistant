@@ -61,15 +61,15 @@ const PDFViewer = ({ fileUrl, downloadUrl }) => {
         {/* Controls */}
         <div className="flex flex-wrap gap-3 justify-between items-center w-full mb-4">
           <div className="flex gap-2">
-            <button onClick={zoomOut} className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">-</button>
+            <button onClick={zoomOut} className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white px-3 py-1 rounded mx-1">-</button>
             <span className="text-sm">Zoom: {(scale * 100).toFixed(0)}%</span>
-            <button onClick={zoomIn} className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">+</button>
+            <button onClick={zoomIn} className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white px-3 py-1 rounded mx-1">+</button>
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={toggleSidebar}
-              className="bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 text-sm"
+            className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white px-3 py-1 rounded mx-1"
             >
               {sidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
             </button>
@@ -92,7 +92,7 @@ const PDFViewer = ({ fileUrl, downloadUrl }) => {
         </div>
 
         {/* Viewer */}
-        <div ref={viewerRef} className="border shadow p-4 bg-white rounded">
+        <div ref={viewerRef} className="flex-1 overflow-auto border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-4 rounded shadow">
           <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess}>
             <Page pageNumber={pageNumber} scale={scale} />
           </Document>

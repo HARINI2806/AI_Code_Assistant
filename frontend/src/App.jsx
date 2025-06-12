@@ -13,6 +13,7 @@ import SummaryPage from './pages/SummaryPage';
 
 function App() {
   return (
+    <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
     <Router>
       <NavBar />
       <Routes>
@@ -26,6 +27,7 @@ function App() {
         <Route path="/summary" element={<SummaryPage />} /> 
       </Routes>
     </Router>
+    </div>
   );
 }
 

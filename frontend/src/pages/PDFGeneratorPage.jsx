@@ -67,7 +67,6 @@ const PDFGeneratorPage = () => {
       {pdfUrl && downloadUrl && (
         <PDFViewer fileUrl={pdfUrl} downloadUrl={downloadUrl} />
       )}
-    </div>
   );
 };
 

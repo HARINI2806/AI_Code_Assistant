@@ -21,7 +21,7 @@ const QAPrompt = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <div className="w-full max-w-3xl mx-auto bg-white p-6 rounded shadow dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
       <h3 className="text-xl font-bold mb-4">Ask a Question</h3>
 
       <textarea
@@ -29,7 +29,7 @@ const QAPrompt = () => {
         onChange={(e) => setQuestion(e.target.value)}
         placeholder="Ask something about your codebase..."
         rows={3}
-        className="w-full border p-3 rounded"
+        className="w-full border p-3 rounded dark:bg-gray-900 text-gray-900 dark:text-gray-100"
       />
 
       <button

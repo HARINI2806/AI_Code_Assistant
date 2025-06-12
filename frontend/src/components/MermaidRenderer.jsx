@@ -9,7 +9,7 @@ const MermaidRenderer = () => {
 
   const generateDiagram = async () => {
     try {
-      const response = await axios.post('/api/visualizer/generate', {
+      const response = await axios.post('http://localhost:8000/visualizer/visualizer/dependency-graph', {
         type: 'class', // You could let the user choose type
       });
       setDiagram(response.data.diagram);

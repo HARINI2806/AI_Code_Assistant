@@ -11,7 +11,7 @@ const QAPrompt = () => {
     if (!question.trim()) return;
     try {
       setLoading(true);
-      const res = await axios.post('/api/qa', { question });
+      const res = await axios.post('http://localhost:8000/qa/ask', { question });
       setAnswer(res.data.answer || 'No answer returned.');
     } catch (err) {
       setAnswer('Error fetching answer. Please try again.');

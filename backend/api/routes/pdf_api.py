@@ -13,7 +13,10 @@ class PDFRequest(BaseModel):
 
 @router.post("/pdf")
 async def generate_pdf(req: PDFRequest):
-    path = req.codebase_path or "./sample-codebase"
+    base_path = "./sample-codebase"
+    selected = req.codebase_path or "ALL"
+    path = base_path if selected == "ALL" else os.path.join(base_path, selected)
+
     if not os.path.exists(path):
         raise HTTPException(status_code=400, detail=f"Invalid codebase path: {path}")
 
@@ -23,6 +26,7 @@ async def generate_pdf(req: PDFRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/pdf/download")
 async def download_pdf():
     if not os.path.exists(PDF_OUTPUT_PATH):
@@ -31,8 +35,12 @@ async def download_pdf():
 
 @router.get("/pdf/codebases")
 def list_codebases():
-    folder = "./sample-codebase"
-    try:
-        return {"codebases": [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    base = "./sample-codebase"
+    items = []
+
+    for root, dirs, files in os.walk(base):
+        for name in dirs + files:
+            rel_path = os.path.relpath(os.path.join(root, name), base)
+            if any(rel_path.endswith(ext) for ext in [".py", ".js", ".java"]) or os.path.isdir(os.path.join(base, rel_path)):
+                items.append(rel_path)
+    return {"codebases": ["ALL"] + sorted(items)}

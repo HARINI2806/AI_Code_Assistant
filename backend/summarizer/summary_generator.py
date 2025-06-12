@@ -58,13 +58,20 @@ async def summarize_file(file_path: str) -> str:
         file_summary += f"- {summary}\n"
     return file_summary
 
-async def generate_summaries(codebase_path: str) -> str:
-    files = collect_code_files(codebase_path)
-    if not files:
-        return "No supported code files found."
+async def generate_summaries(path: str) -> str:
+    if os.path.isfile(path):
+        return await summarize_file(path)
 
-    all_summaries = "# Codebase Tutorial Summary\n\n"
-    for f in files:
-        summary = await summarize_file(f)
-        all_summaries += summary + "\n\n"
-    return all_summaries
+    if os.path.isdir(path):
+        files = collect_code_files(path)
+        if not files:
+            return "No supported code files found."
+
+        all_summaries = "# Codebase Tutorial Summary\n\n"
+        for f in files:
+            summary = await summarize_file(f)
+            all_summaries += summary + "\n\n"
+        return all_summaries
+
+    raise ValueError(f"Path '{path}' is neither a file nor a folder.")
+

@@ -26,13 +26,13 @@ const ExecutionConsole = () => {
         placeholder="Enter function name (e.g. my_module.my_func)"
         value={functionName}
         onChange={(e) => setFunctionName(e.target.value)}
-        className="w-full border p-2 rounded"
+        className="w-full border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 rounded px-4 py-2"
       />
       <textarea
         placeholder='Optional arguments (JSON format: ["arg1", 123, true])'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
-        className="w-full border p-2 rounded"
+       className="w-full border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 rounded px-4 py-2"
         rows={4}
       />
       <button

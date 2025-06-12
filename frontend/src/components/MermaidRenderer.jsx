@@ -188,7 +188,7 @@ const MermaidRenderer = () => {
   const IconComponent = selectedDiagramType?.icon || Package;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div className="min-h-screen p-6 dark:bg-gray-900 text-gray-900 dark:text-white">
       <div className="max-w-7xl mx-auto dark:bg-gray-900 dark:text-white ">
         {/* Header */}
         <div className="text-center mb-8 dark:bg-gray-900 dark:text-white">

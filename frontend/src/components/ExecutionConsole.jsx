@@ -1,7 +1,6 @@
 // src/components/ExecutionConsole.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import ReactJson from 'react18-json-view';
 
 const ExecutionConsole = () => {
   const [runnableFiles, setRunnableFiles] = useState([]);

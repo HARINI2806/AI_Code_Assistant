@@ -21,7 +21,7 @@ const FileUploader = () => {
 
     try {
       setStatus('Uploading and embedding...');
-      const res = await axios.post('/api/embedder/embed', formData, {
+      const res = await axios.post('http://localhost:8000/embed/embed', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setStatus(res.data.message || 'Embedding completed.');
@@ -33,7 +33,7 @@ const FileUploader = () => {
   const handleDefaultEmbed = async () => {
     try {
       setStatus('Embedding default codebase...');
-      const res = await axios.post('/api/embedder/embed-default');
+      const res = await axios.post('http://localhost:8000/embed/embed');
       setStatus(res.data.message || 'Default codebase embedded.');
     } catch (err) {
       setStatus('Embedding failed: ' + err.message);

@@ -1,0 +1,12 @@
+graph TD
+    Root[Project Root]
+    Root --> main[main.py]
+    Root --> __init__[__init__.py]
+    Root --> PKG_models[models/]
+    PKG_models --> models_account[account.py]
+    PKG_models --> models_bank[bank.py]
+    PKG_models --> models_transaction[transaction.py]
+    PKG_models --> models___init__[__init__.py]
+    Root --> PKG_utils[utils/]
+    PKG_utils --> utils_exporter[exporter.py]
+    PKG_utils --> utils___init__[__init__.py]

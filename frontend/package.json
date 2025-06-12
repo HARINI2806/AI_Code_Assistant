@@ -20,6 +20,7 @@
         "framer-motion": "^12.17.0",
         "html-to-image": "^1.11.13",
         "lottie-react": "^2.4.1",
+        "lucide-react": "^0.514.0",
         "mermaid": "^10.9.3",
         "pdfjs-dist": "^3.11.174",
         "prism-react-renderer": "^2.4.1",

@@ -38,35 +38,36 @@ const PDFGeneratorPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-semibold">Generate Codebase Summary PDF</h2>
+    <></>
+  //   <div className="p-6 space-y-6">
+  //     <h2 className="text-2xl font-semibold">Generate Codebase Summary PDF</h2>
 
-      <div className="flex items-center gap-4">
-        <select
-          value={selectedCodebase}
-          onChange={(e) => setSelectedCodebase(e.target.value)}
-          className="p-2 border rounded"
-        >
-          <option value="">Select a codebase</option>
-          {codebases.map((cb) => (
-            <option key={cb} value={cb}>
-              {cb}
-            </option>
-          ))}
-        </select>
+  //     <div className="flex items-center gap-4">
+  //       <select
+  //         value={selectedCodebase}
+  //         onChange={(e) => setSelectedCodebase(e.target.value)}
+  //         className="p-2 border rounded"
+  //       >
+  //         <option value="">Select a codebase</option>
+  //         {codebases.map((cb) => (
+  //           <option key={cb} value={cb}>
+  //             {cb}
+  //           </option>
+  //         ))}
+  //       </select>
 
-        <button
-          onClick={handleGeneratePDF}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          disabled={!selectedCodebase}
-        >
-          Generate PDF
-        </button>
-      </div>
+  //       <button
+  //         onClick={handleGeneratePDF}
+  //         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+  //         disabled={!selectedCodebase}
+  //       >
+  //         Generate PDF
+  //       </button>
+  //     </div>
 
-      {pdfUrl && downloadUrl && (
-        <PDFViewer fileUrl={pdfUrl} downloadUrl={downloadUrl} />
-      )}
+  //     {pdfUrl && downloadUrl && (
+  //       <PDFViewer fileUrl={pdfUrl} downloadUrl={downloadUrl} />
+  //     )}
   );
 };
 

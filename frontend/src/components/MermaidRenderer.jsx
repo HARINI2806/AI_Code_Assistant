@@ -31,20 +31,24 @@ const MermaidRenderer = () => {
     setLoading(true);
     setDiagramText('');
     setDownloadLink('');
+    if (diagramRef.current) {
     diagramRef.current.innerHTML = '';
+  }
 
     try {
       const endpoint =
         diagramType === 'class'
-          ? '/api/visualizer/class-diagram'
-          : '/api/visualizer/dependency-graph';
-
+          ? 'http://localhost:8000/visualizer/visualizer/class-diagram'
+          : 'http://localhost:8000/visualizer/visualizer/dependency-graph';
+      
+      console.log(endpoint)
       const res = await axios.post(endpoint);
-      const filename = res.data.file.split('/').pop();
-
-      const fetchText = await axios.get(`/api/visualizer/download?file=${filename}`);
-      setDiagramText(fetchText.data);
-      setDownloadLink(`/api/visualizer/download?file=${filename}`);
+      if(res.status == 200){
+        const filename = res.data.file.split('\\').pop();
+        const fetchText = await axios.get(`http://localhost:8000/visualizer/visualizer/download?file=${filename}`);
+        setDiagramText(fetchText.data);
+        setDownloadLink(`http://localhost:8000/visualizer/visualizer/download?file=${filename}`);
+      }
     } catch (err) {
       alert('Error generating diagram: ' + err.message);
     } finally {

@@ -21,7 +21,7 @@ const QAPrompt = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white p-6 rounded shadow dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <div className="w-full max-w-3xl mx-auto bg-white p-6 rounded shadow dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <h3 className="text-xl font-bold mb-4">Ask a Question</h3>
 
       <textarea
@@ -40,7 +40,7 @@ const QAPrompt = () => {
       </button>
 
       {answer && (
-        <div className="mt-6 bg-gray-100 p-4 rounded border">
+        <div className="mt-6 bg-gray-100 p-4 rounded border dark:bg-gray-900 text-gray-900 dark:text-gray-100">
           <strong className="block mb-2">Answer:</strong>
           <p>{answer}</p>
         </div>

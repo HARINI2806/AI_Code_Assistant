@@ -1,0 +1,15 @@
+graph TB
+    subgraph Legend
+        L1[Low Complexity < 50 LOC]
+        L2[Medium Complexity 50-200 LOC]
+        L3[High Complexity > 200 LOC]
+    end
+    main[main<br/>LOC: 15<br/>CC: 1]:::low
+    __init__[__init__<br/>LOC: 0<br/>CC: 0]:::low
+    account[account<br/>LOC: 23<br/>CC: 6]:::low
+    bank[bank<br/>LOC: 21<br/>CC: 7]:::low
+    transaction[transaction<br/>LOC: 14<br/>CC: 2]:::low
+    exporter[exporter<br/>LOC: 11<br/>CC: 3]:::low
+    classDef low fill:#90EE90
+    classDef medium fill:#FFD700
+    classDef high fill:#FF6B6B

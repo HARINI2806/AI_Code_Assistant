@@ -3,9 +3,8 @@ uvicorn
 openai==0.28.1
 tree-sitter
 tiktoken
-langchain
-langchain_community
-# ast
+# langchain
+# langchain_community
 reportlab
 chromadb
 python-dotenv
@@ -25,4 +24,4 @@ rich>=13.7.1
 # For async OpenAI Streaming
 httpx>=0.27.0
 routes
-langchain-openai
+# langchain-openai

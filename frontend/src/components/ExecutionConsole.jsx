@@ -232,30 +232,42 @@ const ExecutionConsole = () => {
       </div>
 
       {/* Output display */}
-      {output && (
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 overflow-auto max-w-full">
-          <h3 className="text-lg font-semibold mb-2">Output:</h3>
-          <ReactJson
-            src={output}
-            name={false}
-            collapsed={false}
-            displayDataTypes={false}
-            displayObjectSize={false}
-            collapseStringsAfterLength={false}
-            iconStyle="none" // 👈 hides the expand/collapse icon
-            enableClipboard
-            indentWidth={2}
-            theme="harmonic"
-            style={{
-              fontSize: '14px',
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-              backgroundColor: 'transparent',
-              whiteSpace: 'pre',
-              wordBreak: 'break-word',
-            }}
-          />
-        </div>
-      )}
+    {output && (
+  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-300 dark:border-gray-700 overflow-auto max-w-full relative">
+    <div className="flex justify-between items-center mb-2">
+      <h3 className="text-lg font-semibold">Output:</h3>
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(JSON.stringify(output, null, 2));
+          }}
+          className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Copy JSON
+        </button>
+        <button
+          onClick={() => {
+            const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'output.json';
+            link.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Download
+        </button>
+      </div>
+    </div>
+
+    <pre className="whitespace-pre-wrap break-words text-sm font-mono text-gray-800 dark:text-gray-100 bg-transparent">
+      {JSON.stringify(output, null, 2)}
+    </pre>
+  </div>
+)}
+
 
       {/* Tips */}
       <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">

@@ -46,8 +46,7 @@ const SummaryViewer = () => {
 
   return (
     <div className="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded shadow space-y-4">
-      <h2 className="text-xl font-semibold">Codebase Summary</h2>
-
+    
       <div className="flex gap-4 items-center">
         <label>Codebase:</label>
         <select

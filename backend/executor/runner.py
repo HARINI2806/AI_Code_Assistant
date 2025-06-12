@@ -15,26 +15,20 @@ def find_python_files(codebase_path: str) -> list[str]:
     return py_files
 
 def find_runnable_python_files(base_path: str) -> list[str]:
-    """Find all directories containing main.py files (runnable codebases)"""
-    runnable_codebases = []
-    
+    """Recursively find all .py files under the given base_path."""
+    runnable_files = []
+
     if not os.path.exists(base_path):
-        return runnable_codebases
-    
-    # Check if base_path itself has main.py
-    main_path = os.path.join(base_path, "main.py")
-    if os.path.exists(main_path):
-        runnable_codebases.append("main.py")
-    
-    # Check subdirectories for main.py
-    for item in os.listdir(base_path):
-        item_path = os.path.join(base_path, item)
-        if os.path.isdir(item_path):
-            main_file = os.path.join(item_path, "main.py")
-            if os.path.exists(main_file):
-                runnable_codebases.append(f"{item}/main.py")
-    
-    return runnable_codebases
+        return runnable_files
+
+    for root, _, files in os.walk(base_path):
+        for file in files:
+            if file.endswith('.py') and not file.startswith('__'):
+                full_path = os.path.join(root, file)
+                relative_path = os.path.relpath(full_path, base_path)
+                runnable_files.append(relative_path)
+
+    return runnable_files
 
 def extract_function_source(file_path: str, function_name: str) -> str | None:
     """Extract source code of a specific function from a Python file"""

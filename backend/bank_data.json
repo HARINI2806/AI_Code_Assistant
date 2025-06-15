@@ -1,31 +1,31 @@
 {
   "Alice": {
-    "balance": 800,
+    "balance": 4000,
     "transactions": [
       {
-        "amount": 1000,
+        "amount": 5000,
         "type": "deposit",
-        "timestamp": "2025-06-13T00:23:52.409261"
+        "timestamp": "2025-06-13T12:57:42.344437"
       },
       {
-        "amount": 200,
+        "amount": 1000,
         "type": "withdrawal",
-        "timestamp": "2025-06-13T00:23:52.409261"
+        "timestamp": "2025-06-13T12:57:42.344437"
       }
     ]
   },
   "Bob": {
-    "balance": 700,
+    "balance": 2000,
     "transactions": [
       {
-        "amount": 500,
+        "amount": 1000,
         "type": "deposit",
-        "timestamp": "2025-06-13T00:23:52.409261"
+        "timestamp": "2025-06-13T12:57:42.344437"
       },
       {
-        "amount": 200,
+        "amount": 1000,
         "type": "deposit",
-        "timestamp": "2025-06-13T00:23:52.409261"
+        "timestamp": "2025-06-13T12:57:42.344437"
       }
     ]
   }
